@@ -1,32 +1,33 @@
 import { comparePassword, hashPassword } from "../helpers/authHelper.js";
 import userModel from "../models/userModel.js";
 import JWT from "jsonwebtoken";
+import nodemailer from 'nodemailer';
 export const registerController =async(req,res) =>{
     try{
         const {firstName,lastName, dob, gender, email, password} = req.body;
         if(!firstName){
-            return res.send({error:'FirstName is Required'})
+            return res.send({message:'FirstName is Required'})
         }
         if(!lastName){
-            return res.send({error:'lastName is Required'})
+            return res.send({message:'lastName is Required'})
         }
         if(!dob){
-            return res.send({error:'dob is Required'})
+            return res.send({message:'dob is Required'})
         }
         if(!gender){
-            return res.send({error:'gender is Required'})
+            return res.send({message:'gender is Required'})
         }
         if(!email){
-            return res.send({error:'email is Required'})
+            return res.send({message:'email is Required'})
         }
         if(!password){
-            return res.send({error:'password is Required'})
+            return res.send({message:'password is Required'})
         }
         //check user
         const existingUser = await userModel.findOne({email})
         if(existingUser){
             return res.status(200).send({
-                success: true,
+                success: false,
                 message:'Already Register Please login'
             })
         }
@@ -105,3 +106,115 @@ export const LoginController = async(req,res) => {
 export const testController = (req,res) =>{
     res.send('Protected routes');
 }
+
+//forget password
+export const forgotPasswordController =async(req,res)=>{
+    const {email} = req.body;
+    try{
+        const oldUser = await userModel.findOne({email})
+        if(!oldUser){
+            return res.send("User Not Exists!!");
+        }
+    const secret = process.env.JWT_SECRET + oldUser.password;
+    const token = JWT.sign({email: oldUser.email, id: oldUser._id}, secret, {
+        expiresIn: "5m",
+    });
+    const link = `http://localhost:8080/api/v1/auth/reset-password/${oldUser._id}/${token}`;
+    console.log(link);
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+        }
+      });
+      
+      var mailOptions = {
+        from: 'test@gmail.com',
+        to: email,
+        subject: 'Sending Email using Node.js',
+        text: link,
+      };
+      
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
+      
+    res.status(200).send({
+        success:true,
+        message: "Forgot Password",
+        link,
+    })
+    }
+    catch(error){
+        console.log(error);
+
+    }
+}
+// reset password
+export const resetPasswordController = async (req, res) => {
+    const { id, token } = req.params;
+    console.log(req.params);
+    const oldUser = await userModel.findOne({ _id: id });
+    if (!oldUser) {
+        return res.send({
+            status: true,
+            message: "User not Exists",
+        });
+    }
+    const secret = process.env.JWT_SECRET + oldUser.password;
+    try {
+        const verify = JWT.verify(token, secret);
+        return res.send("Verified");
+        
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: "False",
+            error,
+            message: "Not Verified",
+        });
+    }
+};
+
+// Update password
+export const updatePasswordController = async (req, res) => {
+    const { id, token } = req.params;
+    const { password } = req.body;
+    console.log(req.params);
+    const oldUser = await userModel.findOne({ _id: id });
+    if (!oldUser) {
+        return res.send({
+            status: true,
+            message: "User not Exists",
+        });
+    }
+    const secret = process.env.JWT_SECRET + oldUser.password;
+    try {
+        const verify = JWT.verify(token, secret);
+        const encryptedPassword = await hashPassword(password);
+        await userModel.updateOne(
+            {
+                _id: id,
+            },
+            {
+                $set:{
+                    password: encryptedPassword,
+                }
+            }
+        )
+        res.send("Updated");
+        
+    } catch (error) {
+        console.log(error);
+        res.send({
+            success: "False",
+            error,
+            message: "Something went Wrong",
+        });
+    }
+};
