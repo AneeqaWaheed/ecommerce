@@ -2,6 +2,7 @@ import { comparePassword, hashPassword } from "../helpers/authHelper.js";
 import userModel from "../models/userModel.js";
 import JWT from "jsonwebtoken";
 import nodemailer from 'nodemailer';
+//registration
 export const registerController =async(req,res) =>{
     try{
         const {firstName,lastName, dob, gender, email, password} = req.body;
@@ -52,6 +53,7 @@ export const registerController =async(req,res) =>{
         })
     }
 };
+//login
 
 export const LoginController = async(req,res) => {
     try{
@@ -103,7 +105,7 @@ export const LoginController = async(req,res) => {
         })
     }
 };
-
+//test controller
 export const testController = (req,res) =>{
     res.send('Protected routes');
 }

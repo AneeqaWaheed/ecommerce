@@ -1,5 +1,5 @@
 import orderModel from "../models/orderModel.js";
-
+//get Order
 export const getOrdersController = async(req,res)=>{
     try {
         const orders = await orderModel.find({buyer:req.user._id})
@@ -19,7 +19,7 @@ export const getOrdersController = async(req,res)=>{
         });
     }
 }
-
+//update order status
 export const orderStatusController = async(req,res)=>{
     try{
         const {orderId} = req.params;
@@ -27,7 +27,7 @@ export const orderStatusController = async(req,res)=>{
         const orders = await orderModel.findByIdAndUpdate(orderId, 
             {status}, 
             {new:true});
-            res.json(oreders);
+            res.json(oreders); 
     }
     catch(error){
         console.log(error);
