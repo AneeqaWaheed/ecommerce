@@ -222,37 +222,38 @@ export const updatePasswordController = async (req, res) => {
 
 //update profile
 
-export const updateProfileCOntroller = async(req,res)=>{
-    try{
-        const {firstName,lastName, dob, gender, email, password} = req.body;
-        const user = await userModel.findById(req.user._id)
-        //password
-        if(!password && password.length <6){
-            return res.json({error: 'Password is required and 6 characters long'})
+export const updateProfileController = async (req, res) => {
+    try {
+        const { firstName, lastName, dob, gender, email, password } = req.body;
+        const user = await userModel.findById(req.params.id);
+
+        // Password
+        if (password && password.length < 6) {
+            return res.json({ error: 'Password must be at least 6 characters long' });
         }
-        const hashedPassword = password ? await hashPassword(password) :undefined
-        const updatedUser = await userModel.findByIdAndUpdate(req.user._id,{
-            firstName: firstName ||user.firstName,
-            lastName: lastName ||user.lastName,
-            dob: dob ||user.dob,
-            gender: gender ||user.gender,
-            email: email ||user.email,
-            password: password ||user.password,
 
+        const hashedPassword = password ? await hashPassword(password) : undefined;
 
-        },{new: true })
+        const updatedUser = await userModel.findByIdAndUpdate(req.params.id, {
+            firstName: firstName || user.firstName,
+            lastName: lastName || user.lastName,
+            dob: dob || user.dob,
+            gender: gender || user.gender,
+            email: email || user.email,
+            password: hashedPassword || user.password,
+        }, { new: true });
+
         res.status(200).send({
-            success:true,
+            success: true,
             message: "Profile Updated Successfully",
             updatedUser
-        })
-    }
-    catch(error){
+        });
+    } catch (error) {
         console.log(error);
         res.send({
-            success: "False",
+            success: false,
             error,
             message: "Error while updating profile",
         });
     }
-}
+};
