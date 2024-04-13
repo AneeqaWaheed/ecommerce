@@ -165,3 +165,86 @@ export const updateProductController = async(req,res) =>{
         })
     }
 }
+
+export const productFilterController = async(req,res)=>{
+    try{
+        const {checked,radio}= req.body;
+        let args ={}
+        if(checked.length>0)args.categories= checked
+        if(radio.length) args.price = {$gte: radio[0], $lte:radio[1]};
+        const products = await Product.find(args);
+        res.status(200).send({
+            success: true,
+            products
+        })
+    }
+    catch(error){
+        console.log(error);
+        res.status(500).send({
+            success:false,
+            message:'Error while filtering Products'
+        })
+    }
+}
+
+export const productCountController =async(req,res)=>{
+    try{
+        const total = await Product.find({}).estimatedDocumentCount();
+        res.status(200).send({
+            success:true,
+            total
+        })
+    }
+    catch(error){
+        console.log(error);
+        res.status(500).send({
+            success:false,
+            message:'Error in Product Count'
+        })
+    } 
+}
+export const productListController = async(req,res)=>{
+    try{
+        const perPage = 6;
+        const page = req.params.page ? req.params.page:1
+        const products = await Product
+        .find({})
+        .select("-images")
+        .skip((page-1) * perPage)
+        .limit(perPage)
+        .sort({createdAt: -1});
+        res.status(200).send({
+            success: true,
+            products
+        })
+    }
+    catch(error){
+        console.log(error);
+        res.status(500).send({
+            success:false,
+            message:'Server Error'
+        })
+    } 
+}
+
+//search Controller
+
+export const searchProductController = async(req,res) =>{
+    try{
+        const {keyword} = req.params;
+        const results  = await Product.find({
+                $or:[
+                    {title: {$regex: keyword, $options: "i"}},
+                    {description: {$regex: keyword, $options: "i"}}
+                ]
+        }).select("-images");
+        res.json(results);
+    }
+    catch(error){
+        console.log(error);
+        res.status(500).send({
+            success:false,
+            message:'Error while searching Products'
+        })
+    }
+}
