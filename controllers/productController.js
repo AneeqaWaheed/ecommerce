@@ -1,5 +1,6 @@
 import Product from "../models/productModel.js";
 import fs from 'fs';
+//create product
 export const createProductController = async(req,res) =>{
     try{
         const {title,description,price,discountPrice,categories,stock,colors,sizes,published,shipping} = req.fields;
@@ -35,7 +36,7 @@ export const createProductController = async(req,res) =>{
         })
     }
 }
-
+//get Products
 export const getProductController = async(req,res) =>{
     try{
         const products = await Product
@@ -60,6 +61,7 @@ export const getProductController = async(req,res) =>{
     })
     }
 }
+//get single product
 export const singleProductController = async(req,res) =>{
     try{
         const product = await Product.findOne({id:req.body.id}).select("-images").populate("categories");
@@ -78,8 +80,7 @@ export const singleProductController = async(req,res) =>{
         })
     }
 }
-
-
+//get Product Image
 export const productImageController = async (req, res) => {
     try {
         const product = await Product.findById(req.params.pid).select("images");
@@ -103,7 +104,7 @@ export const productImageController = async (req, res) => {
         });
     }
 };
-
+//delete product
 export const deleteProductController = async(req,res)=>{
     try{
         const {id} = req.params;
@@ -165,7 +166,7 @@ export const updateProductController = async(req,res) =>{
         })
     }
 }
-
+//product filter
 export const productFilterController = async(req,res)=>{
     try{
         const {checked,radio}= req.body;
@@ -186,7 +187,7 @@ export const productFilterController = async(req,res)=>{
         })
     }
 }
-
+//product count
 export const productCountController =async(req,res)=>{
     try{
         const total = await Product.find({}).estimatedDocumentCount();
